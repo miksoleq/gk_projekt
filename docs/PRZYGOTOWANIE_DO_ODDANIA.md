@@ -36,7 +36,11 @@ Używamy Kotlina/JVM, Compose Multiplatform Desktop i Gradle. Konfiguracja proje
 | Plik | Odpowiedzialność | Przykład |
 |---|---|---|
 | `Main.kt` | Interfejs, zaznaczenie, obsługa myszy i dialogów | Kliknięcie G1 wywołuje operację modelu i pokazuje jej wynik |
-| `model/Geometry.kt` | Punkty, wektory, topologia, relacje, solver, wybór wnętrza | Korekta końca krawędzi do zadanej długości |
+| `model/Geometry.kt` | Punkt, wektor i ich operacje | Różnica dwóch punktów daje wektor |
+| `model/Edge.kt`, `model/EdgeGeometry.kt` | Typy krawędzi i obliczenia na konkretnej krawędzi | Punkt i długość Béziera |
+| `model/Polygon.kt`, `model/Scene.kt` | Wielokąt, scena i operacje edycji | Dodanie wierzchołka i zmiana typu krawędzi |
+| `model/Constraints.kt`, `model/ConstraintSolver.kt` | Dane relacji i mechanizm ich rozwiązywania | Korekta długości i sprawdzenie prostopadłości |
+| `model/BezierEditing.kt`, `model/HitTesting.kt` | Podział Béziera, translacja uchwytów, testy trafienia | Podział krzywej metodą de Casteljau |
 | `model/CircularArc.kt` | Matematyka okręgu | Wyliczenie środka z końców i kąta |
 | `model/DemoScene.kt` | Dane sceny startowej | Gwiazda z samoprzecięciami |
 | `drawing/DrawingAlgorithms.kt` | Algorytmy niezależne od Compose | Bresenham, różnice skończone, clipping |
@@ -1073,7 +1077,7 @@ Jedno przejście solvera to w przybliżeniu koszt wielu skanów/kopii `O((C+J+A)
 ### 6.3. Ograniczenia, które warto uczciwie powiedzieć
 
 1. Solver ma ustaloną liczbę sekwencyjnych korekt. Nie gwarantuje rozwiązania każdej zgodnej sieci relacji ani minimalnego przesunięcia. Dla pojedynczej pary odwrócenie kolejności kliknięcia nie ustala innej krawędzi sterującej; przy wielu relacjach wynik nadal może zależeć od kolejności wykonywania korekt.
-2. Punkty przeciągane przez użytkownika nie są globalnie zablokowane jako twarde kotwice solvera. Korekta może je zmienić albo odrzucić ruch.
+2. Solver może wewnętrznie przesuwać punkty podczas kolejnych korekt. Przed zatwierdzeniem sprawdza pozycję przeciąganego punktu i odrzuca wynik, jeśli odsunął go od celu. Nie jest to globalny solver z dokładną analizą stopni swobody.
 3. Długość Béziera, hit testing i wnętrze krzywych korzystają z 40 odcinków. To przybliżenie bez adaptacyjnej kontroli błędu. Próbki rysowania są inne, więc blisko brzegu krzywej może wystąpić mała rozbieżność między widocznym obrysem a trafieniem.
 4. Podział krzywej zachowuje kształt przed wymuszeniem zewnętrznych relacji. Podział łuku z zewnętrznym G1 może z definicji zmienić kształt części G0–G0.
 5. Zmiana typu krawędzi jest zmianą reprezentacji i geometrii; nie jest ogólną dokładną konwersją okręgu w pojedynczy wielomianowy Bézier.
@@ -1326,7 +1330,7 @@ W teście renderujemy tę samą scenę w obu trybach i porównujemy rzeczywiste 
 
 **50. Co poprawiłbyś jako następne?**
 
-Największe obszary to solver: lepsza analiza zależności, twarde kotwice przeciągania i wykrywanie rzeczywistych konfliktów; ponadto adaptacyjna długość i hit testing krzywych, mapa ID dla szybkiego dostępu, undo/redo i zapis sceny. Każda taka zmiana powinna mieć osobne testy zachowania. Nie należy przedstawiać ich jako już zaimplementowanych.
+Największe obszary to solver: lepsza analiza zależności, skuteczniejsze uwzględnianie kotwic wewnątrz wszystkich korekt i wykrywanie rzeczywistych konfliktów; ponadto adaptacyjna długość i hit testing krzywych, mapa ID dla szybkiego dostępu, undo/redo i zapis sceny. Pozycja przeciąganego punktu jest już sprawdzana przy zatwierdzeniu. Każde dalsze usprawnienie powinno mieć osobne testy zachowania.
 
 <a id="prezentacja"></a>
 
@@ -1357,22 +1361,22 @@ Przećwicz tę kolejność przed oddaniem. Złożone relacje prezentuj na kontro
 | Funkcja lub typ | Gdzie | Co umieć pokazać |
 |---|---|---|
 | `Point`, `Vector` | `Geometry.kt` | Semantykę operatorów i brak dodawania położeń |
-| `addPolygon` | `Geometry.kt` | Minimum trzech punktów, niezerowe boki, nowe ID bez zmiany starych figur |
+| `addPolygon` | `Scene.kt` | Minimum trzech punktów, niezerowe boki, nowe ID bez zmiany starych figur |
 | `DragTarget`, `DragGesture` | `interaction/DragGesture.kt` | Bezwzględny cel ruchu oraz odstęp kliknięcia |
 | `HelpDialog` | `ui/HelpDialog.kt` | Instrukcję z zasobu dołączonego do aplikacji |
-| `Polygon`, `Scene`, `EdgeGeometry` | `Geometry.kt` | Listy cykliczne, inwarianty, stabilne ID |
-| `tryMoveVertex`, `tryMovePolygon` | `Geometry.kt` | Kopię kandydatury i uruchomienie solvera |
-| `insertAtEdgeMidpoint`, `removeVertex` | `Geometry.kt` | Aktualizację topologii i usunięcie relacji |
-| `addLengthConstraint`, `enforceLength` | `Geometry.kt` | Rejestrację warunku i korektę geometrii |
-| `addPerpendicularConstraint`, `enforcePerpendicular` | `Geometry.kt` | Iloczyn skalarny i wolny koniec |
-| `solveConstraints`, `constraintsSatisfied` | `Geometry.kt` | 16 korekt i osobną walidację |
-| `ConstraintEdit`, `perpendicularPriorities`, `keepEndForCorrection` | `Geometry.kt` | Jedno źródło na grupę relacji, priorytety BFS i wybór kotwicy korekt długości oraz prostopadłości |
-| `toggleBezier`, `setContinuity` | `Geometry.kt` | Typ geometrii, flagę `explicit`, klasy ciągłości |
-| `propagateDraggedControl`, `enforceContinuityAt` | `Geometry.kt` | Kto jest źródłem stycznej, kto się dostosowuje |
-| `splitBezier` | `Geometry.kt` | Sześć interpolacji de Casteljau |
-| `pointAt`, `arcLength` | `Geometry.kt` | Wzór parametryczny i 40 cięciw |
-| `toggleArc`, `enforceArcs`, `arcContinuityError` | `Geometry.kt` | G0–G0 i dopasowanie G1, blokadę dwóch G1 |
-| `distanceToSegment`, `containsPoint` | `Geometry.kt` | Rzut z clampem i winding number |
+| `Polygon`, `Scene`, `EdgeGeometry` | `Polygon.kt`, `Scene.kt`, `EdgeGeometry.kt` | Listy cykliczne, inwarianty, stabilne ID |
+| `tryMoveVertex`, `tryMovePolygon` | `Scene.kt` | Kopię kandydatury i uruchomienie solvera |
+| `insertAtEdgeMidpoint`, `removeVertex` | `Scene.kt` | Aktualizację topologii i usunięcie relacji |
+| `addLengthConstraint`, `enforceLength` | `Scene.kt`, `ConstraintSolver.kt` | Rejestrację warunku i korektę geometrii |
+| `addPerpendicularConstraint`, `enforcePerpendicular` | `Scene.kt`, `ConstraintSolver.kt` | Iloczyn skalarny i wolny koniec |
+| `solveConstraints`, `constraintsSatisfied` | `ConstraintSolver.kt` | 16 korekt i osobną walidację |
+| `ConstraintEdit`, `perpendicularPriorities`, `keepEndForCorrection` | `ConstraintSolver.kt` | Jedno źródło na grupę relacji, priorytety BFS i wybór kotwicy korekt długości oraz prostopadłości |
+| `toggleBezier`, `setContinuity` | `Scene.kt` | Typ geometrii, flagę `explicit`, klasy ciągłości |
+| `propagateDraggedControl`, `enforceContinuityAt` | `ConstraintSolver.kt` | Kto jest źródłem stycznej, kto się dostosowuje |
+| `splitBezier` | `BezierEditing.kt` | Interpolacje de Casteljau potrzebne do podziału |
+| `pointAt`, `arcLength` | `EdgeGeometry.kt` | Wzór parametryczny i 40 cięciw |
+| `toggleArc`, `enforceArcs`, `arcContinuityError` | `Scene.kt`, `ConstraintSolver.kt` | G0–G0 i dopasowanie G1, blokadę dwóch G1 |
+| `distanceToSegment`, `containsPoint` | `HitTesting.kt` | Rzut z clampem i winding number |
 | `CircularArcGeometry` | `CircularArc.kt` | Środek, promień, obrót i styczne |
 | `fromTangent` | `CircularArc.kt` | Podwojony podpisany kąt i degeneracje |
 | `bresenhamLine` | `DrawingAlgorithms.kt` | Błąd całkowitoliczbowy, dwa `if`, `Long` |
