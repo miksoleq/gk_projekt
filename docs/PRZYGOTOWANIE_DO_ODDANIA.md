@@ -25,7 +25,7 @@ Opracowanie opisuje aktualny kod punktów 1–9. Łączy teorię, przykłady lic
 
 To desktopowy edytor zamkniętych konturów wielokątów, których krawędzie mogą być odcinkami, sześciennymi krzywymi Béziera albo łukami okręgów. Pozwala edytować geometrię i narzucać wybrane relacje. Samoprzecięcia są dozwolone.
 
-Scena początkowa zawiera trzy figury oraz relacje długości i prostopadłości na czworokącie. Użytkownik może tworzyć kolejne wielokąty przez klikanie i zmieniać liczbę ich wierzchołków. Nie ma usuwania całych wielokątów, zapisu do pliku ani undo/redo.
+Scena początkowa zawiera trzy figury oraz relacje długości i prostopadłości na czworokącie. Użytkownik może zmieniać liczbę wierzchołków istniejących figur. Nowe wielokąty można dodać w kodzie sceny początkowej. Nie ma tworzenia ani usuwania całych wielokątów z interfejsu, zapisu do pliku ani undo/redo.
 
 **Przykład:** na scenie wybierasz pięciokąt, zmieniasz krawędź w Béziera, ustawiasz C1 i przeciągasz uchwyt. Kształt zmienia się razem z elementem sąsiednim, tak aby zachować styczną.
 
@@ -1005,11 +1005,11 @@ przesunięcie = cel - aktualna pozycja punktu w modelu
 
 **Wyjątek z długością:** jeśli krzywa ma zadaną długość, ruch uchwytu może wymagać przesunięcia jej własnych końców. Skalujemy pozostałe punkty wokół przeciąganego uchwytu: `X' = H + (X-H)*s`, gdzie `H` to uchwyt i `s = długość docelowa / bieżąca`. Wtedy `H'=H`, a przy stałym kształcie względnym wszystkie długości skalują się przez `s`. Następne relacje nadal muszą przejść walidację.
 
-**Tworzenie:** „Nowy wielokąt” uruchamia szkic. Kolejne lewe kliknięcia dodają punkty; Enter, kliknięcie pierwszego punktu lub przycisk zamykają kontur. Backspace usuwa ostatni punkt, Escape anuluje szkic. `Scene.addPolygon` wymaga co najmniej trzech skończonych punktów i różnych sąsiadów, przydziela nowe ID, zachowuje istniejące figury i relacje. Samoprzecięcia są dopuszczalne; nie wymagamy dodatniego pola algebraicznego.
+**Scena początkowa:** użytkownik edytuje przygotowane wielokąty, w tym dodaje i usuwa ich wierzchołki. Nowe wielokąty dodajemy w kodzie `DemoScene.kt`; samoprzecięcia są dopuszczalne.
 
 ### Punkt 7: granice odpowiedzialności
 
-Geometria i ograniczenia pozostają w `model/`, niezależne od Compose. Funkcje Bresenhama, różnic skończonych i clippingu pozostają czystymi algorytmami. Renderer jedynie rysuje ich wynik. `DragGesture` przekłada pozycję kursora na żądanie zmiany modelu. `Main.kt` rozpoznaje element i przechowuje stan wyboru, szkic, dialogi i komunikaty; `HelpDialog` wyświetla pomoc. Nie wprowadzamy dużego frameworka architektonicznego dla samej liczby klas.
+Geometria i ograniczenia pozostają w `model/`, niezależne od Compose. Funkcje Bresenhama, różnic skończonych i clippingu pozostają czystymi algorytmami. Renderer jedynie rysuje ich wynik. `DragGesture` przekłada pozycję kursora na żądanie zmiany modelu. `Main.kt` rozpoznaje element i przechowuje stan wyboru, dialogi i komunikaty; `HelpDialog` wyświetla pomoc. Nie wprowadzamy dużego frameworka architektonicznego dla samej liczby klas.
 
 **Przykład:** jednostkowy test może przesunąć uchwyt pod C1 bez uruchamiania okna. Może również zasymulować bezwzględne pozycje myszy i sprawdzić odstęp kliknięcia. Same zdarzenia przycisków i skrótów wymagają dodatkowej kontroli w działającym oknie.
 
@@ -1021,9 +1021,9 @@ Scena zawiera samoprzecinającą się gwiazdę, pięciokąt z Bézierem oraz czw
 
 ### Punkt 9: dokumentacja pod ręką
 
-Przycisk „Pomoc · F1” otwiera przewijaną instrukcję z zasobu `src/main/resources/help.md`. Zasób jest dołączony do aplikacji, więc pomoc działa offline i po zainstalowaniu pakietu. Obejmuje mysz i skróty, tworzenie, założenia, model danych, algorytmy rysowania i algorytm relacji, wraz z ograniczeniami solvera. Tekst można zaznaczać i kopiować.
+Przycisk „Pomoc · F1” otwiera przewijaną instrukcję z zasobu `src/main/resources/help.md`. Zasób jest dołączony do aplikacji, więc pomoc działa offline i po zainstalowaniu pakietu. Obejmuje mysz i skróty, edycję, założenia, model danych, algorytmy rysowania i algorytm relacji, wraz z ograniczeniami solvera. Tekst można zaznaczać i kopiować.
 
-**Przykład prezentacji:** uruchom program, pokaż relacje na czworokącie, przeciągnij uchwyt pięciokąta, utwórz trójkąt z trzech kliknięć, naciśnij Enter, a następnie F1. Ten dokument jest szerszym materiałem do nauki; pomoc aplikacji służy użytkownikowi podczas pracy.
+**Przykład prezentacji:** uruchom program, pokaż relacje na czworokącie, przeciągnij uchwyt pięciokąta, wstaw wierzchołek na wybranej krawędzi, a następnie naciśnij F1. Ten dokument jest szerszym materiałem do nauki; pomoc aplikacji służy użytkownikowi podczas pracy.
 
 <a id="weryfikacja"></a>
 
@@ -1031,7 +1031,7 @@ Przycisk „Pomoc · F1” otwiera przewijaną instrukcję z zasobu `src/main/re
 
 ### 6.1. Jakie dowody poprawności mamy?
 
-Ostatni zapisany raport obejmuje **57 testów**: 17 testów sceny, 14 łuków, 10 interakcyjnej edycji prostopadłości, 7 interakcji/tworzenia/sceny startowej, 6 algorytmów rysowania, 2 renderera i 1 układu pomocy. To liczba metod testowych; jedna metoda Bresenhama sprawdza wiele setek przypadków w pętli.
+Ostatni zapisany raport obejmuje **56 testów**: 17 testów sceny, 14 łuków, 10 interakcyjnej edycji prostopadłości, 6 interakcji i sceny startowej, 6 algorytmów rysowania, 2 renderera i 1 układu pomocy. To liczba metod testowych; jedna metoda Bresenhama sprawdza wiele setek przypadków w pętli.
 
 | Obszar | Co jest sprawdzane | Przykład |
 |---|---|---|
@@ -1050,7 +1050,7 @@ Ostatni zapisany raport obejmuje **57 testów**: 17 testów sceny, 14 łuków, 1
 
 **Dlaczego niezależny wzór?** Test porównujący funkcję z jej własnym wynikiem nie wykryłby tej samej pomyłki po obu stronach. Przyrostowy Bézier jest sprawdzany względem bezpośredniego wzoru Bernsteina. Przy Bresenhamie testy dodatkowo sprawdzają własności geometryczne.
 
-Testy nie dowodzą poprawności dla każdego możliwego układu ograniczeń. Przykładowo wszystkie 57 testów nie wykluczają problemów z bardzo gęstą, cykliczną siecią relacji. Pomoc jest dodatkowo renderowana w ImageComposeScene i sprawdzana przy przewijaniu; nie zastępuje to ręcznego sprawdzenia wszystkich kliknięć i skrótów w natywnym oknie.
+Testy nie dowodzą poprawności dla każdego możliwego układu ograniczeń. Przykładowo wszystkie 56 testów nie wykluczają problemów z bardzo gęstą, cykliczną siecią relacji. Pomoc jest dodatkowo renderowana w ImageComposeScene i sprawdzana przy przewijaniu; nie zastępuje to ręcznego sprawdzenia wszystkich kliknięć i skrótów w natywnym oknie.
 
 ### 6.2. Złożoność — teoria a nasz kod
 
@@ -1084,7 +1084,7 @@ Jedno przejście solvera to w przybliżeniu koszt wielu skanów/kopii `O((C+J+A)
 6. G1/G0 łuków ma politykę z zadania. Nie ma C1 dla łuku, dowolnego promienia w trybie G0–G0 ani przycisku odwrócenia strony półokręgu.
 7. Bresenham nie ma własnego antyaliasingu. Pogrubianie kwadratowym stemplem różni się od bibliotecznego obrysu z okrągłymi zakończeniami.
 8. Dla skrajnych współrzędnych mogą ujawnić się problemy precyzji lub wydajności. Są zabezpieczenia przed zerem i limit próbek, ale nie pełny system odpornej arytmetyki geometrycznej.
-9. Nie ma zapisu, wczytywania, undo/redo ani usuwania całych wielokątów przez użytkownika. Tworzenie przez klikanie jest dostępne.
+9. Nie ma zapisu, wczytywania, undo/redo ani tworzenia lub usuwania całych wielokątów przez użytkownika.
 10. Projekt przewiduje dystrybucje macOS/Windows, ale nie należy deklarować, że działanie na Windows zostało zweryfikowane w tej sesji. Konfiguracja targetów i faktyczne testy na danym systemie to różne rzeczy.
 
 **Przykład odpowiedzi zamiast ukrywania ograniczenia:** „Przy bardzo rozbudowanych cyklach relacji mój solver może nie osiągnąć zbieżności. Operacja jest wtedy odrzucana i zachowuję poprzednią poprawną scenę. Usprawnieniem byłby globalny solver z analizą stopni swobody i sterowaniem kotwicami”.
@@ -1361,7 +1361,6 @@ Przećwicz tę kolejność przed oddaniem. Złożone relacje prezentuj na kontro
 | Funkcja lub typ | Gdzie | Co umieć pokazać |
 |---|---|---|
 | `Point`, `Vector` | `Geometry.kt` | Semantykę operatorów i brak dodawania położeń |
-| `addPolygon` | `Scene.kt` | Minimum trzech punktów, niezerowe boki, nowe ID bez zmiany starych figur |
 | `DragTarget`, `DragGesture` | `interaction/DragGesture.kt` | Bezwzględny cel ruchu oraz odstęp kliknięcia |
 | `HelpDialog` | `ui/HelpDialog.kt` | Instrukcję z zasobu dołączonego do aplikacji |
 | `Polygon`, `Scene`, `EdgeGeometry` | `Polygon.kt`, `Scene.kt`, `EdgeGeometry.kt` | Listy cykliczne, inwarianty, stabilne ID |

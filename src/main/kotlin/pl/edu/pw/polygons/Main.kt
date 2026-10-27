@@ -36,7 +36,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.ExperimentalComposeUiApi
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.Alignment
@@ -139,27 +138,11 @@ private fun PolygonEditor() {
     var selection by remember { mutableStateOf<Selection?>(null) }
     var selectedEdgeIds by remember { mutableStateOf<List<Long>>(emptyList()) }
     var dragGesture by remember { mutableStateOf<DragGesture?>(null) }
-    var draft by remember { mutableStateOf<List<Point>?>(null) }
-    var draftPointer by remember { mutableStateOf<Point?>(null) }
     var showHelp by remember { mutableStateOf(false) }
     val editorFocus = remember { FocusRequester() }
     var lengthDialogEdgeId by remember { mutableStateOf<Long?>(null) }
     var lengthText by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("Kliknij wierzchołek, krawędź lub wnętrze wielokąta.") }
-
-    fun finishPolygon() {
-        val points = draft ?: return
-        when (val result = scene.addPolygon(points)) {
-            is ConstraintUpdate.Applied -> {
-                scene = result.scene
-                selection = Selection.PolygonBody(result.scene.polygons.last().id)
-                draft = null
-                draftPointer = null
-                message = "Dodano wielokąt. Możesz edytować jego wierzchołki i krawędzie."
-            }
-            is ConstraintUpdate.Rejected -> message = result.reason
-        }
-    }
 
     LaunchedEffect(Unit) { editorFocus.requestFocus() }
 
@@ -169,16 +152,14 @@ private fun PolygonEditor() {
             when (event.key) {
                 Key.F1 -> { showHelp = true; dragGesture = null; true }
                 Key.Escape -> {
-                    draft = null; draftPointer = null; dragGesture = null
+                    dragGesture = null
                     selection = null; selectedEdgeIds = emptyList()
                     message = "Anulowano bieżącą czynność i wyczyszczono wybór."
                     true
                 }
-                Key.Enter -> if (draft != null) { finishPolygon(); true } else false
-                Key.Backspace -> if (draft != null) { draft = draft!!.dropLast(1); true } else false
                 Key.Delete -> {
                     val selected = selection
-                    if (draft == null && selected is Selection.Vertex) {
+                    if (selected is Selection.Vertex) {
                         val updated = scene.removeVertex(selected.vertexId)
                         if (updated != scene) {
                             scene = updated; selection = null; selectedEdgeIds = emptyList(); dragGesture = null
@@ -198,20 +179,6 @@ private fun PolygonEditor() {
                 Text("Edytor wielokątów", fontSize = 20.sp, color = ink)
                 Text("Zadanie 1 · punkty 1–9", fontSize = 13.sp, color = blue)
                 Button(onClick = { showHelp = true; dragGesture = null }, modifier = Modifier.fillMaxWidth()) { Text("Pomoc · F1") }
-                if (draft == null) {
-                    Button(onClick = {
-                        draft = emptyList(); selection = null; selectedEdgeIds = emptyList(); dragGesture = null
-                        editorFocus.requestFocus()
-                        message = "Klikaj wierzchołki. Kliknij pierwszy punkt lub Enter, aby zamknąć; Escape anuluje."
-                    }, modifier = Modifier.fillMaxWidth()) { Text("Nowy wielokąt") }
-                } else {
-                    Text("Nowy wielokąt · ${draft!!.size} punktów", color = ink)
-                    Button(onClick = { finishPolygon(); editorFocus.requestFocus() }, enabled = draft!!.size >= 3,
-                        modifier = Modifier.fillMaxWidth()) { Text("Zamknij wielokąt · Enter") }
-                    Button(onClick = {
-                        draft = null; draftPointer = null; editorFocus.requestFocus(); message = "Anulowano tworzenie."
-                    }, modifier = Modifier.fillMaxWidth()) { Text("Anuluj · Escape") }
-                }
                 Divider()
                 Text("RYSOWANIE ODCINKÓW", fontSize = 11.sp, color = Color.Gray)
                 Column(Modifier.selectableGroup()) {
@@ -383,8 +350,6 @@ private fun PolygonEditor() {
                     selection = null
                     selectedEdgeIds = emptyList()
                     dragGesture = null
-                    draft = null
-                    draftPointer = null
                     message = "Przywrócono scenę początkową."
                 }, modifier = Modifier.fillMaxWidth()) { Text("Przywróć scenę") }
             }
@@ -406,14 +371,6 @@ private fun PolygonEditor() {
                                     editorFocus.requestFocus()
                                     val view = viewport(size.width.toFloat(), size.height.toFloat())
                                     val pointer = view.scenePoint(change.position)
-                                    val points = draft
-                                    if (points != null) {
-                                        if (points.size >= 3 && pointer.distanceTo(points.first()) <= 10.0 / view.scale) finishPolygon()
-                                        else if (points.lastOrNull()?.distanceTo(pointer)?.let { it <= 1e-9 } != true) {
-                                            draft = points + pointer
-                                        }
-                                        return@onPointerEvent
-                                    }
                                     selection = hitTest(scene, pointer, 10.0 / view.scale)
                                     if (selection is Selection.Edge) {
                                         val edgeId = (selection as Selection.Edge).edgeId
@@ -441,7 +398,6 @@ private fun PolygonEditor() {
                                     val change = event.changes.firstOrNull() ?: return@onPointerEvent
                                     val view = viewport(size.width.toFloat(), size.height.toFloat())
                                     val pointer = view.scenePoint(change.position)
-                                    if (draft != null) { draftPointer = pointer; return@onPointerEvent }
                                     if (!event.buttons.isPrimaryPressed) { dragGesture = null; return@onPointerEvent }
                                     val gesture = dragGesture ?: return@onPointerEvent
                                     when (val result = gesture.move(scene, pointer)) {
@@ -469,17 +425,6 @@ private fun PolygonEditor() {
                                 palette = palette,
                                 highlight = orange,
                             )
-                            draft?.let { points ->
-                                fun screen(point: Point): Offset {
-                                    val p = view.screenPoint(point)
-                                    return Offset(p.x.toFloat(), p.y.toFloat())
-                                }
-                                points.zipWithNext().forEach { (a, b) -> drawLine(blue, screen(a), screen(b), 2f) }
-                                if (points.isNotEmpty()) draftPointer?.let { drawLine(blue, screen(points.last()), screen(it), 1f) }
-                                points.forEachIndexed { index, point ->
-                                    drawCircle(if (index == 0) orange else blue, 5f, screen(point))
-                                }
-                            }
                         }
                     }
                 }

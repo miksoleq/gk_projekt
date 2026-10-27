@@ -121,21 +121,6 @@ class InteractionTest {
     }
 
     @Test
-    fun `creating a self intersecting polygon allocates unique ids and preserves existing relations`() {
-        val scene = demoScene()
-        val points = listOf(Point(0.0, 0.0), Point(20.0, 20.0), Point(0.0, 20.0), Point(20.0, 0.0))
-        val updated = scene.addPolygon(points).applied()
-        assertEquals(scene.polygons, updated.polygons.dropLast(1))
-        assertEquals(scene.constraints, updated.constraints)
-        assertEquals(points, updated.polygons.last().vertices.map { it.point })
-        assertEquals(points.size, updated.polygons.last().edges.size)
-        assertEquals(scene.nextId + 1 + 2 * points.size, updated.nextId)
-        assertIs<ConstraintUpdate.Rejected>(scene.addPolygon(points.take(2)))
-        assertIs<ConstraintUpdate.Rejected>(scene.addPolygon(listOf(points[0], points[0], points[1])))
-        assertIs<ConstraintUpdate.Rejected>(scene.addPolygon(listOf(points[0], Point(Double.NaN, 0.0), points[1])))
-    }
-
-    @Test
     fun `startup relations are satisfied and the curved examples remain editable`() {
         val scene = demoScene()
         assertTrue(scene.polygons.size >= 2)

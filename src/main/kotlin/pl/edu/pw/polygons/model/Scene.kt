@@ -25,22 +25,6 @@ data class Scene(
 
     fun polygon(id: Long) = polygons.firstOrNull { it.id == id }
 
-    /** A closed polygon; self-intersections are allowed, zero-length sides are not. */
-    fun addPolygon(points: List<Point>): ConstraintUpdate {
-        if (points.size < 3) return ConstraintUpdate.Rejected("Wielokąt musi mieć co najmniej trzy wierzchołki.")
-        if (points.any { !it.x.isFinite() || !it.y.isFinite() }) return ConstraintUpdate.Rejected("Współrzędne muszą być skończone.")
-        if (points.indices.any { points[it].distanceTo(points[(it + 1) % points.size]) <= EPSILON }) {
-            return ConstraintUpdate.Rejected("Sąsiednie wierzchołki muszą być różne.")
-        }
-        var next = nextId
-        val id = next++
-        val vertices = points.map { Vertex(next++, it) }
-        val edges = points.map { Edge(next++) }
-        return ConstraintUpdate.Applied(copy(
-            polygons = polygons + Polygon(id, "Wielokąt ${polygons.size + 1}", vertices, edges), nextId = next,
-        ))
-    }
-
     fun edgeGeometry(edgeId: Long): EdgeGeometry? {
         polygons.forEach { polygon ->
             val edgeIndex = polygon.edges.indexOfFirst { it.id == edgeId }

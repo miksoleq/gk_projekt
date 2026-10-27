@@ -15,7 +15,6 @@ W Windows można użyć `gradlew.bat run`. Przycisk „Przywróć scenę” odtw
 ## Obsługa
 
 - „Pomoc · F1” otwiera wbudowaną instrukcję z obsługą myszy i klawiatury, założeniami, modelem danych i algorytmami. Jej źródłem jest [help.md](src/main/resources/help.md), dołączany do aplikacji jako zasób.
-- „Nowy wielokąt” rozpoczyna szkic. Klikaj kolejne punkty lewym przyciskiem; kliknięcie pierwszego punktu, Enter lub „Zamknij wielokąt” zamyka figurę. Escape anuluje, Backspace usuwa ostatni punkt. Potrzeba co najmniej trzech wierzchołków. Samoprzecięcia są dozwolone.
 - Przeciąganie działa lewym przyciskiem. Edycja używa bezwzględnej pozycji kursora z zachowaniem początkowego odstępu od środka punktu; odmowa jednego ruchu nie rozstraja kolejnych ruchów.
 - Escape przerywa bieżącą czynność i czyści wybór, Delete usuwa wybrany wierzchołek. Podczas wpisywania długości skróty edytora nie przechwytują edycji tekstu.
 - Na górze panelu wybierz radio button „Biblioteczny” albo „Bresenham”. Zmiana działa od razu i dotyczy odcinków, ich zaznaczenia oraz łączenia kolejnych punktów Béziera.

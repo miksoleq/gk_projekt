@@ -3,10 +3,10 @@ Lewy przycisk myszy wybiera i przeciąga element. Wierzchołek zmienia kształt,
 
 Kliknij jedną krawędź, aby ustawić długość. Kliknij dwie krawędzie kolejno, aby ustawić prostopadłość; mogą należeć do różnych wielokątów. Ponowne kliknięcie krawędzi usuwa ją z wyboru. Relacje usuwa się przyciskiem „Usuń” na ich liście.
 
-F1 otwiera pomoc. Escape zamyka pomoc, anuluje tworzenie albo kończy przeciąganie i czyści wybór. W trybie tworzenia Enter zamyka wielokąt, Backspace usuwa ostatni dodany punkt. Po wybraniu wierzchołka Delete usuwa go (pozostają co najmniej trzy). Skróty działają w obszarze edytora; podczas wpisywania długości działa zwykła edycja tekstu.
+F1 otwiera pomoc. Escape zamyka pomoc albo kończy przeciąganie i czyści wybór. Po wybraniu wierzchołka Delete usuwa go (pozostają co najmniej trzy). Skróty działają w obszarze edytora; podczas wpisywania długości działa zwykła edycja tekstu.
 
-# Tworzenie i edycja
-Wybierz „Nowy wielokąt” i klikaj kolejne wierzchołki. Zamknij figurę kliknięciem pierwszego punktu, Enterem albo przyciskiem „Zamknij wielokąt”. Wymagane są co najmniej trzy punkty; sąsiednie punkty muszą być różne. Samoprzecięcia są dozwolone. Escape lub „Anuluj” porzuca szkic.
+# Edycja wielokątów
+Wielokąty są przygotowane w scenie początkowej; ich liczbę można zmienić w kodzie w DemoScene.kt. Samoprzecięcia są dozwolone.
 
 Po wybraniu krawędzi można dodać wierzchołek, zmienić ją w Béziera lub łuk, a następnie przywrócić odcinek. Podział odbywa się w t=0.5; dla krzywej nie oznacza to środka cięciwy. Usunięcie wierzchołka i podział usuwają relacje zmienionych krawędzi. Zmiany topologii są ponownie sprawdzane.
 
