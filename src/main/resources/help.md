@@ -32,7 +32,7 @@ model/ zawiera geometrię i solver bez Compose. Geometry.kt opisuje punkty i wek
 # Algorytmy rysowania
 Radio button wybiera biblioteczne rysowanie odcinków albo własnego Bresenhama. Bresenham używa całkowitych współrzędnych i akumulatora błędu, działa we wszystkich oktantach; Compose nanosi wybrane piksele. Przed rasteryzacją Liang–Barsky przycina niewidoczne części odcinków.
 
-Bézier jest zawsze liczony własnym algorytmem przyrostowym: przejście z bazy Bernsteina do B(t)=a*t³+b*t²+c*t+d, a następnie aktualizacja punktu i trzech różnic skończonych przez dodawanie. Liczba próbek zależy od rozmiaru wieloboku kontrolnego na ekranie, z limitem 100000. Próbki łączy wybrany algorytm odcinków. Łuki rysuje biblioteczne arcTo. Wypełnienie i wybór wnętrza używają reguły non-zero winding, więc środek samoprzecinającej się gwiazdy pozostaje wypełniony.
+Bézier jest zawsze liczony własnym algorytmem przyrostowym: przejście z bazy Bernsteina do B(t)=a*t³+b*t²+c*t+d, a następnie aktualizacja punktu i trzech różnic skończonych przez dodawanie. Liczba próbek zależy od rozmiaru wieloboku kontrolnego na ekranie, z limitem 100000. Próbki łączy wybrany algorytm odcinków. Łuki rysuje biblioteczne arcTo. Wybór wnętrza używa reguły non-zero winding, więc można wybrać również środek samoprzecinającej się gwiazdy.
 
 # Scena początkowa i założenia
 Po starcie są trzy wielokąty: samoprzecinająca się gwiazda, pięciokąt z Bézierem oraz czworokąt z półokręgiem. Górna krawędź czworokąta ma długość 160 i jest prostopadła do prawej. Scenę odtwarza „Przywróć scenę”. W DemoScene.kt wystarczy dopisać kolejne wywołanie pomocniczej funkcji polygon; identyfikatory przydzielają się automatycznie.

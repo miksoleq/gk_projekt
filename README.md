@@ -89,9 +89,9 @@ W każdej iteracji ważna jest kolejność: najpierw aktualizujemy punkt ze star
 
 Liczba kroków zależy od punktów kontrolnych po przeliczeniu na ekran. Korzystamy z ograniczenia prędkości `|B'(t)| <= 3 * max(|P1-P0|, |P2-P1|, |P3-P2|)`. Wybieramy `N` tak, aby odstęp próbek wynosił najwyżej około jednego piksela, z limitem 100 000 kroków na segment. Limit chroni płynność dla skrajnie odległych punktów kontrolnych; po jego osiągnięciu odstępy mogą być większe.
 
-Te same próbki są używane do wypełnienia, obrysu i zaznaczenia. Próbki łączymy biblioteczną łamaną albo Bresenhamem, zgodnie z radio buttonem. Renderowanie Béziera nie wywołuje `cubicTo` ani nie oblicza wielomianu osobno w każdej iteracji. Matematyczny `pointAt` w modelu nadal służy m.in. do podziału krzywej, obliczeń długości i wykrywania kliknięć.
+Te same próbki są używane do obrysu i zaznaczenia. Próbki łączymy biblioteczną łamaną albo Bresenhamem, zgodnie z radio buttonem. Renderowanie Béziera nie wywołuje `cubicTo` ani nie oblicza wielomianu osobno w każdej iteracji. Matematyczny `pointAt` w modelu nadal służy m.in. do podziału krzywej, obliczeń długości i wykrywania kliknięć.
 
-Łuki okręgów korzystają z bibliotecznego `arcTo`. Wypełnienie, przerywane linie pomocnicze oraz uchwyty również rysuje biblioteka. Wypełnienie i wykrywanie wnętrza korzystają z niezerowej liczby nawinięć (non-zero winding). Dzięki temu środek samoprzecinającej się gwiazdy jest wypełniony i można go kliknąć, aby przeciągać wielokąt.
+Łuki okręgów korzystają z bibliotecznego `arcTo`. Przerywane linie pomocnicze oraz uchwyty również rysuje biblioteka. Wykrywanie wnętrza korzysta z niezerowej liczby nawinięć (non-zero winding), dzięki czemu można kliknąć środek samoprzecinającej się gwiazdy, aby przeciągać wielokąt.
 
 ## Testy i pakowanie
 

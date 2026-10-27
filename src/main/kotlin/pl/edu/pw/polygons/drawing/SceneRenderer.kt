@@ -5,7 +5,6 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.PointMode
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -61,13 +60,6 @@ fun DrawScope.drawPolygonScene(
             incrementalBezier(edge.start, edge.firstControl, edge.secondControl, edge.end,
                 bezierStepCount(edge.start, edge.firstControl, edge.secondControl, edge.end))
         } else emptyList() }
-        val fill = Path().apply {
-            fillType = PathFillType.NonZero
-            moveTo(edges.first().start.x.toFloat(), edges.first().start.y.toFloat())
-            edges.forEach { appendEdge(it, samples.getValue(it.edgeId)) }
-            close()
-        }
-        drawPath(fill, color.copy(alpha = if (selected) 0.20f else 0.11f))
         edges.forEach { edge ->
             drawEdge(edge, samples.getValue(edge.edgeId), lineAlgorithm, color, (if (selected) 3.5f else 2.5f) * scale)
         }
