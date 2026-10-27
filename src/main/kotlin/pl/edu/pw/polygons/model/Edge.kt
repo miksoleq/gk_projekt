@@ -15,9 +15,5 @@ sealed interface EdgeShape {
 }
 
 enum class Continuity { G0, G1, C1 }
-
-/** `explicit` distinguishes a user's choice from the default selected for a new curve. */
 data class ContinuitySetting(val continuity: Continuity, val explicit: Boolean)
-
-/** An edge owns its ID; its end points are the adjacent vertices in polygon order. */
 data class Edge(val id: Long, val shape: EdgeShape = EdgeShape.Line)

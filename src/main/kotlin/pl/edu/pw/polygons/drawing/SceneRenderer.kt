@@ -34,8 +34,6 @@ data class RenderSelection(
     val controlIndex: Int?,
     val edgeIds: List<Long>,
 )
-
-/** Project once, then rasterize on the actual screen grid without scaling the resulting pixels. */
 fun DrawScope.drawPolygonScene(
     scene: Scene,
     viewport: Viewport,
@@ -59,7 +57,6 @@ fun DrawScope.drawPolygonScene(
             }
             geometry.copy(start = viewport.screenPoint(geometry.start), end = viewport.screenPoint(geometry.end), shape = shape)
         }
-        // The same incremental samples feed the fill boundary, outline and highlight.
         val samples = edges.associate { edge -> edge.edgeId to if (edge.isBezier) {
             incrementalBezier(edge.start, edge.firstControl, edge.secondControl, edge.end,
                 bezierStepCount(edge.start, edge.firstControl, edge.secondControl, edge.end))
@@ -84,7 +81,6 @@ fun DrawScope.drawPolygonScene(
         edges.filter { it.edgeId in selection.edgeIds }.forEach { edge ->
             drawEdge(edge, samples.getValue(edge.edgeId), lineAlgorithm, highlight, 5f * scale)
         }
-        // Handles come last so that a highlighted edge cannot obscure their hit targets.
         polygon.vertices.forEach { vertex ->
             val active = selection.vertexId == vertex.id
             val radius = (if (active) 7.5f else 5.5f) * scale
@@ -125,10 +121,7 @@ private fun DrawScope.drawEdge(edge: EdgeGeometry, samples: List<Point>, algorit
         else -> drawLine(color, edge.start.offset(), edge.end.offset(), width, StrokeCap.Round)
     }
 }
-
-/** The library only stamps the pixels we chose; it does not rasterize any line here. */
 internal fun DrawScope.drawBresenhamPolyline(points: List<Point>, color: Color, width: Float) {
-    // Odd integer brush sizes centered at x+0.5/y+0.5 align with pixel boundaries.
     val brushWidth = (2 * (width.coerceAtLeast(1f) / 2).toInt() + 1).toFloat()
     val padding = (brushWidth / 2).toDouble()
     val pixels = mutableListOf<Offset>()

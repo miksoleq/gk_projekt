@@ -114,7 +114,6 @@ class InteractionTest {
         ), listOf(Edge(6), Edge(7), Edge(8), Edge(9)))), 10)
             .toggleArc(6).applied().setContinuity(2, Continuity.G1).applied()
         val arcGesture = DragGesture.begin(arc, DragTarget.Vertex(5), Point(60.0, 240.0))!!
-        // This would make the G1 tangent parallel to the chord: no finite circle exists.
         assertIs<ConstraintUpdate.Rejected>(arcGesture.move(arc, Point(60.0, 140.0)))
         val recovered = arcGesture.move(arc, Point(90.0, 220.0)).applied()
         assertPoint(Point(90.0, 220.0), recovered.polygons.single().vertices.last().point)

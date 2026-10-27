@@ -58,7 +58,6 @@ class SceneRendererTest {
         for (x in 0 until 900) for (y in 0 until 470) if (images[0][x, y] != images[1][x, y]) differences++
         assertTrue(differences > 100, "Switching algorithms should change the actual rasterized image")
         assertTrue(images.all { it[180, 225] != Color.White }, "The center of the star must be filled in both modes")
-        // These lie in the demo's curved polygon and beyond its semicircle's chord.
         assertTrue(images.all { it[430, 200] != Color.White && it[750, 350] != Color.White })
     }
 }

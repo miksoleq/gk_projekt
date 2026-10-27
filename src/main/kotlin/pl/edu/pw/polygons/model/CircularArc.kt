@@ -6,8 +6,6 @@ import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.tan
-
-/** A circle through two endpoints, described by its signed central angle. */
 data class CircularArcGeometry(val start: Point, val end: Point, val sweep: Double) {
     val center: Point
         get() {
@@ -18,7 +16,6 @@ data class CircularArcGeometry(val start: Point, val end: Point, val sweep: Doub
     val length get() = radius * abs(sweep)
 
     fun pointAt(t: Double): Point {
-        // Return the exact endpoints to avoid visible gaps caused by rounding.
         if (t == 0.0) return start
         if (t == 1.0) return end
         return center + (start - center).rotated(sweep * t)
@@ -28,14 +25,12 @@ data class CircularArcGeometry(val start: Point, val end: Point, val sweep: Doub
     val endTangent get() = (end - start).rotated(sweep * 0.5).normalized()
 
     companion object {
-        /** A finite circle is uniquely determined by two points and a directed tangent. */
         fun fromTangent(start: Point, end: Point, tangent: Vector, atStart: Boolean): CircularArcGeometry? {
             val chord = end - start
             if (chord.length() < 1e-9 || tangent.length() < 1e-9) return null
             val a = if (atStart) tangent.normalized() else chord.normalized()
             val b = if (atStart) chord.normalized() else tangent.normalized()
             val sweep = 2.0 * atan2(a.x * b.y - a.y * b.x, a.dot(b))
-            // A tangent parallel to the chord requires an infinite radius or a full circle.
             if (abs(sweep) < 1e-7 || abs(sweep) > 2.0 * PI - 1e-7) return null
             return CircularArcGeometry(start, end, sweep)
         }

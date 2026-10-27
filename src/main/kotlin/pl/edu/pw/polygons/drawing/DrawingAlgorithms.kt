@@ -11,11 +11,7 @@ enum class LineAlgorithm(val label: String) {
     Library("Biblioteczny"),
     Bresenham("Bresenham"),
 }
-
-/** An integer address on the screen's pixel grid, rather than a scene position. */
 data class Pixel(val x: Int, val y: Int)
-
-/** Bresenham's integer error accumulator works in every octant, including vertical lines. */
 fun bresenhamLine(start: Pixel, end: Pixel, plot: (Pixel) -> Unit) {
     var x = start.x
     var y = start.y
@@ -28,7 +24,6 @@ fun bresenhamLine(start: Pixel, end: Pixel, plot: (Pixel) -> Unit) {
     while (true) {
         plot(Pixel(x, y))
         if (x == end.x && y == end.y) break
-        // Both decisions use the same error from before either coordinate changes.
         val doubledError = 2 * error
         if (doubledError >= dy) {
             error += dy
@@ -40,8 +35,6 @@ fun bresenhamLine(start: Pixel, end: Pixel, plot: (Pixel) -> Unit) {
         }
     }
 }
-
-/** B(t) = a*t^3 + b*t^2 + c*t + d. Only d is a position; a, b, c are vectors. */
 data class CubicPowerBasis(val a: Vector, val b: Vector, val c: Vector, val d: Point) {
     companion object {
         fun fromBezier(start: Point, first: Point, second: Point, end: Point): CubicPowerBasis {
@@ -56,8 +49,6 @@ data class CubicPowerBasis(val a: Vector, val b: Vector, val c: Vector, val d: P
         }
     }
 }
-
-/** Forward differences: the sampling loop uses additions instead of evaluating a polynomial. */
 fun incrementalBezier(start: Point, first: Point, second: Point, end: Point, steps: Int): List<Point> {
     require(steps in 1..MAX_BEZIER_STEPS) { "Invalid number of Bezier steps" }
     val basis = CubicPowerBasis.fromBezier(start, first, second, end)
@@ -75,20 +66,15 @@ fun incrementalBezier(start: Point, first: Point, second: Point, end: Point, ste
             point += firstDifference
             firstDifference += secondDifference
             secondDifference += thirdDifference
-            // Avoid accumulating a visible endpoint gap from floating point rounding.
             add(if (index == steps) end else point)
         }
     }
 }
-
-/** Called with screen coordinates. The cubic's speed is bounded by 3 times the longest control edge. */
 fun bezierStepCount(start: Point, first: Point, second: Point, end: Point): Int =
     ceil(3.0 * maxOf(start.distanceTo(first), first.distanceTo(second), second.distanceTo(end)))
         .coerceIn(1.0, MAX_BEZIER_STEPS.toDouble()).toInt()
 
 const val MAX_BEZIER_STEPS = 100_000
-
-/** Liang–Barsky clipping keeps off-screen edges from producing millions of invisible pixels. */
 fun clipLine(start: Point, end: Point, left: Double, top: Double, right: Double, bottom: Double): Pair<Point, Point>? {
     require(left <= right && top <= bottom)
     if (!start.x.isFinite() || !start.y.isFinite() || !end.x.isFinite() || !end.y.isFinite()) return null
@@ -108,7 +94,6 @@ fun clipLine(start: Point, end: Point, left: Double, top: Double, right: Double,
     }
     fun clippedPoint(t: Double): Point {
         val point = start + delta * t
-        // Floating point arithmetic may put an intersection just outside a boundary.
         return Point(point.x.coerceIn(left, right), point.y.coerceIn(top, bottom))
     }
     return clippedPoint(firstT) to clippedPoint(lastT)

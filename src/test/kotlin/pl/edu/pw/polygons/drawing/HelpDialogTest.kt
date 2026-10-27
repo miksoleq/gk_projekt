@@ -31,8 +31,6 @@ class HelpDialogTest {
                     val before = Bitmap.makeFromImage(initial)
                     initial.close()
                     try {
-                        // The panel occupies 85% of the available height. A title
-                        // must appear at the top, not beyond the scrolling document.
                         val headerTop = (height * 0.075).toInt()
                         val headerBottom = headerTop + 60
                         fun darkPixels(top: Int, bottom: Int): Int {

@@ -1,8 +1,6 @@
 package pl.edu.pw.polygons.model
 
 import kotlin.math.PI
-
-/** Temporary interaction hints; they are not saved as part of a geometric constraint. */
 internal data class ConstraintEdit(
     val movedVertexIds: Set<Long> = emptySet(),
     val preferredEdgeIds: Set<Long> = emptySet(),
@@ -12,7 +10,6 @@ internal data class ConstraintEdit(
 internal fun Scene.solveConstraints(edit: ConstraintEdit = ConstraintEdit()): ConstraintUpdate {
     arcContinuityError()?.let { return ConstraintUpdate.Rejected(it) }
     val priorities = perpendicularPriorities(edit.preferredEdgeIds)
-    // These positions are hard interaction targets: never silently move the point away from the cursor.
     val vertexTargets = polygons.flatMap { it.vertices }.filter { it.id in edit.movedVertexIds }.associate { it.id to it.point }
     val controlTarget = edit.draggedControl?.let { (edgeId, index) ->
         val edge = edgeGeometry(edgeId) ?: return ConstraintUpdate.Rejected("Brak przeciąganego uchwytu.")
@@ -54,8 +51,6 @@ private fun Scene.enforceLength(constraint: LengthConstraint, edit: ConstraintEd
     val edge = edgeGeometry(constraint.edgeId) ?: return null
     if (edge.length <= EPSILON) return null
     if (kotlin.math.abs(edge.length - constraint.desiredLength) <= CONSTRAINT_TOLERANCE) return this
-    // With a dragged handle, scale around that handle. Its own endpoints may move
-    // only here, because a fixed arc length explicitly requires a geometric correction.
     if (edge.isBezier && edit.draggedControl?.first == edge.edgeId) {
         val anchor = if (edit.draggedControl.second == 0) edge.firstControl else edge.secondControl
         val scale = constraint.desiredLength / edge.length
@@ -90,8 +85,6 @@ private fun Scene.enforceLength(constraint: LengthConstraint, edit: ConstraintEd
 private fun Scene.enforcePerpendicular(constraint: PerpendicularConstraint, edit: ConstraintEdit, priorities: Map<Long, Int>): Scene? {
     val a = edgeGeometry(constraint.firstEdgeId) ?: return null
     val b = edgeGeometry(constraint.secondEdgeId) ?: return null
-    // The edge closer to this interaction drives the relation. With no interaction,
-    // stable IDs break ties so clicking the pair in reverse order gives the same result.
     val aPriority = priorities[a.edgeId] ?: Int.MAX_VALUE
     val bPriority = priorities[b.edgeId] ?: Int.MAX_VALUE
     val aLeads = aPriority < bPriority || (aPriority == bPriority && a.edgeId < b.edgeId)
@@ -102,8 +95,6 @@ private fun Scene.enforcePerpendicular(constraint: PerpendicularConstraint, edit
     var perpendicularDirection = first.direction.normalized().perpendicular()
     if (perpendicularDirection.dot(second.direction) < 0.0) perpendicularDirection = perpendicularDirection * -1.0
 
-    // Preserve the reference joint, or an indirect joint with an upstream edge.
-    // Otherwise a later correction could move the source of the entire chain.
     val keepEnd = when {
         second.endVertexId in first.vertexIds -> true
         second.startVertexId in first.vertexIds -> false
@@ -124,8 +115,6 @@ internal fun Scene.incidentEdgeIds(vertexIds: Set<Long>): Set<Long> = buildSet {
         }
     }
 }
-
-/** One driver per connected component prevents competing sources during a joint drag. */
 private fun Scene.perpendicularPriorities(preferredEdgeIds: Set<Long>): Map<Long, Int> {
     val neighbors = mutableMapOf<Long, MutableList<Long>>()
     constraints.filterIsInstance<PerpendicularConstraint>().forEach { relation ->
@@ -168,8 +157,6 @@ private fun Scene.keepEndForCorrection(edge: EdgeGeometry, edit: ConstraintEdit,
     val endMoved = edge.endVertexId in edit.movedVertexIds
     if (startMoved != endMoved) return endMoved
 
-    // Preserve a joint with an upstream edge or a sibling at the same distance.
-    // Moving a sibling joint would undo a correction from the same driver.
     val ownPriority = priorities[edge.edgeId] ?: Int.MAX_VALUE
     fun upstreamPriority(vertexId: Long): Int = incidentEdgeIds(setOf(vertexId))
         .filter { it != edge.edgeId }.minOfOrNull { priorities[it] ?: Int.MAX_VALUE } ?: Int.MAX_VALUE
@@ -266,7 +253,6 @@ private fun Scene.enforceContinuityAt(vertexId: Long, type: Continuity): Scene? 
     val pair = adjacentEdges(vertexId) ?: return this
     val incoming = edgeGeometry(pair.first) ?: return null
     val outgoing = edgeGeometry(pair.second) ?: return null
-    // At an arc joint the circle follows its neighbor, including a Bezier handle.
     if (incoming.isArc || outgoing.isArc) return this
     if (!incoming.isBezier && !outgoing.isBezier) return this
 
@@ -286,11 +272,6 @@ private fun Scene.enforceContinuityAt(vertexId: Long, type: Continuity): Scene? 
         }
     }
 }
-
-/**
- * A drag makes its own handle the source of truth. At G1/C1 the opposite
- * handle, or the far end of a neighboring line, follows it.
- */
 internal fun Scene.propagateDraggedControl(edgeId: Long, controlIndex: Int): Scene? {
     val edge = edgeGeometry(edgeId) ?: return null
     val vertexId = if (controlIndex == 0) edge.startVertexId else edge.endVertexId

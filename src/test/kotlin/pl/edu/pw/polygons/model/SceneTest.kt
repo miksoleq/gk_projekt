@@ -124,7 +124,6 @@ class SceneTest {
         val firstEdge = polygon.edges[0]
         val secondEdge = polygon.edges[1]
 
-        // The reversed order is important: the corrected edge ends at the shared vertex.
         val constrained = scene
             .addPerpendicularConstraint(secondEdge.id, firstEdge.id)
             .appliedScene()

@@ -99,7 +99,6 @@ data class Scene(
         val defaults = updated.continuity.toMutableMap()
         if (!geometry.isArc) {
             listOf(geometry.startVertexId, geometry.endVertexId).forEach { vertexId ->
-                // Arcs support G0/G1. Replace a default or previous C1 with G0.
                 if (defaults[vertexId]?.continuity != Continuity.G1) {
                     defaults[vertexId] = ContinuitySetting(Continuity.G0, false)
                 }
@@ -181,8 +180,6 @@ data class Scene(
     fun removeConstraint(constraintId: Long): Scene = copy(
         constraints = constraints.filterNot { it.id == constraintId },
     )
-
-    /** Split the selected edge at its geometric midpoint. The old edge keeps its ID. */
     fun insertAtEdgeMidpoint(edgeId: Long): Scene {
         val polygonIndex = polygons.indexOfFirst { polygon -> polygon.edges.any { it.id == edgeId } }
         if (polygonIndex < 0) return this
@@ -208,8 +205,6 @@ data class Scene(
         val newContinuity = when (oldEdge.shape) {
             is EdgeShape.CubicBezier -> continuity + (nextId to ContinuitySetting(Continuity.C1, false))
             is EdgeShape.CircularArc -> {
-                // G1 at the new joint preserves both halves when the outer ends are G0.
-                // If an outer end already has G1, the new joint must stay G0.
                 val type = if (continuityAt(geometry.startVertexId) == Continuity.G1 ||
                     continuityAt(geometry.endVertexId) == Continuity.G1) Continuity.G0 else Continuity.G1
                 continuity + (nextId to ContinuitySetting(type, false))
@@ -228,8 +223,6 @@ data class Scene(
             is ConstraintUpdate.Rejected -> this
         }
     }
-
-    /** Keep the incoming edge ID; the removed vertex's outgoing edge disappears. */
     fun removeVertex(vertexId: Long): Scene {
         val polygonIndex = polygons.indexOfFirst { polygon -> polygon.vertices.any { it.id == vertexId } }
         if (polygonIndex < 0) return this

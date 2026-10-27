@@ -8,8 +8,6 @@ fun distanceToSegment(point: Point, start: Point, end: Point): Double {
     val t = ((relative.x * direction.x + relative.y * direction.y) / lengthSquared).coerceIn(0.0, 1.0)
     return point.distanceTo(start + direction * t)
 }
-
-/** Non-zero winding matches the renderer and includes the center of the self-intersecting star. */
 fun containsPoint(polygon: Polygon, point: Point): Boolean {
     var winding = 0
     polygonBoundarySegments(polygon).forEach { (a, b) ->

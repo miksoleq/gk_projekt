@@ -4,8 +4,6 @@ import pl.edu.pw.polygons.model.ConstraintUpdate
 import pl.edu.pw.polygons.model.Point
 import pl.edu.pw.polygons.model.Scene
 import pl.edu.pw.polygons.model.Vector
-
-/** UI-independent targets; the grab offset prevents a jump when clicking beside a point's center. */
 sealed interface DragTarget {
     data class Vertex(val id: Long) : DragTarget
     data class Control(val edgeId: Long, val index: Int) : DragTarget

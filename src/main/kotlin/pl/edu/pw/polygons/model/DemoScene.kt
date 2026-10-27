@@ -25,7 +25,6 @@ fun demoScene(withConstraints: Boolean = true): Scene {
         ),
         nextId = next,
     )
-    // A Bezier example and a semicircle for exploring points 3 and 4.
     val edgeId = base.polygons[1].edges[1].id
     val arcId = base.polygons[2].edges[2].id
     val edge = base.edgeGeometry(edgeId)!!
@@ -46,7 +45,6 @@ fun demoScene(withConstraints: Boolean = true): Scene {
         ),
     )
     if (!withConstraints) return curved
-    // The rectangular top already satisfies both relations, so startup never deforms the demo.
     val top = curved.polygons[2].edges[0].id
     val right = curved.polygons[2].edges[1].id
     return curved.copy(

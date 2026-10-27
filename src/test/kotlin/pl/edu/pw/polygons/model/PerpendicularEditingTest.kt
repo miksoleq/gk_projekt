@@ -42,7 +42,6 @@ class PerpendicularEditingTest {
         val second = base.polygons[1].edges[0].id
         val orderA = base.addPerpendicularConstraint(first, second).applied()
         val orderB = base.addPerpendicularConstraint(second, first).applied()
-        // Creation also uses a deterministic fallback, not selection order.
         assertEquals(orderA.polygons, orderB.polygons)
         for (polygonIndex in 0..1) for (endpoint in 0..1) {
             val vertex = orderA.polygons[polygonIndex].vertices[endpoint]
@@ -175,7 +174,6 @@ class PerpendicularEditingTest {
                     assertPerpendicular(moved)
                 }
             }
-            // Tiny repeated drags must not feed back into a large expansion of the star.
             base.polygons.first().vertices.zip(moved.polygons.first().vertices).forEach { (original, result) ->
                 assertTrue(original.point.distanceTo(result.point) < 1.0, "Unexpected drift at vertex ${result.id}")
             }

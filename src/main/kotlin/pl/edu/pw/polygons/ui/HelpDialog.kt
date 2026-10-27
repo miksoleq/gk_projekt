@@ -46,8 +46,6 @@ fun HelpDialog(onClose: () -> Unit) {
                 Text("Pomoc — edytor wielokątów", style = MaterialTheme.typography.h6, modifier = Modifier.padding(20.dp))
                 Divider()
                 val scroll = rememberScrollState()
-                // A bounded scroll area between a fixed header and footer avoids
-                // AlertDialog's baseline-based layout measuring a long document.
                 Box(Modifier.weight(1f).fillMaxWidth()) {
                     SelectionContainer {
                         Column(Modifier.fillMaxSize().verticalScroll(scroll).padding(20.dp).padding(end = 12.dp),
